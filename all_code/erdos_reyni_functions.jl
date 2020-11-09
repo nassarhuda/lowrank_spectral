@@ -1,4 +1,5 @@
 using MatrixNetworks
+using Random 
 
 # this function generates a pair of erdos reyni networks to be aligned
 function generate_erdos_reyni_pair(n::Int64,p::Float64,noise_model::Int64,Pe::Float64)
@@ -10,7 +11,7 @@ function generate_erdos_reyni_pair(n::Int64,p::Float64,noise_model::Int64,Pe::Fl
   # Q = convert(SparseMatrixCSC{Int64,Int64},Q)
   if noise_model == 1
     #create B using noise model 1
-    Atilde1 = A.*(1-Q) + (1-A).*Q # noise model 1
+    Atilde1 = A.*(1.0 .- Q) + (1.0 .- A).*Q # noise model 1
     # P = sparse(randperm(nA),randperm(nA),1)
     P = sparse(collect(1:n),collect(n:-1:1),1)
     B = P*Atilde1*P'
@@ -22,9 +23,17 @@ function generate_erdos_reyni_pair(n::Int64,p::Float64,noise_model::Int64,Pe::Fl
     # Qtil[Qtil.<Pe2] = 1
     # Qtil[Qtil.>=Pe2] = 0
     # Qtil = convert(SparseMatrixCSC{Int64,Int64},Qtil)
-    Atilde2 = A.*(1-Q) + (1-A).*Qtil # noise model 2
+    Atilde2 = A.*(1.0 .-Q) + (1.0 .-A).*Qtil # noise model 2
     P = sparse(collect(1:n),collect(n:-1:1),1)
     B = P*Atilde2*P'
+  elseif noise_model == 3
+    #create B using noise model 1
+    Atilde1 = A.*(1.0 .- Q) + (1.0 .- A).*Q # noise model 1
+    # P = sparse(randperm(nA),randperm(nA),1)
+    perm = shuffle(1:n)
+    P = sparse(collect(1:n),perm,1)
+    B = P*Atilde1*P'
+    return A,B,perm
   else
     error("noise_model should either be 1 or 2")
   end
@@ -33,7 +42,7 @@ end
 
 # methods:
 # netalignmr
-using NetworkAlign
+include("/Users/ccolley/Code/NetworkAlignment.jl/src/NetworkAlignment.jl") #local NetworkAlignment code
 function align_erods_reyni(A,B,method::String)
   L = sparse(ones(Int64,size(A,1),size(B,1)))
   S,w,li,lj = netalign_setup(A,B,L)
@@ -63,10 +72,15 @@ function align_erods_reyni(A,B,method::String)
   return ma,mb
 end
 # evaluation:
-function evaluate_erdosreyni_experiment(A,B,ma,mb)
+function evaluate_erdosreyni_experiment(A,B,ma,mb,perm=nothing)
   nA = size(A,1)
-  P = sparse(collect(1:nA),collect(nA:-1:1),1)
+
+  if perm === nothing
+    P = sparse(collect(1:nA),collect(nA:-1:1),1)
+  else
+    P = sparse(collect(1:nA),perm,1)
+  end
   Ptil = sparse(ma,mb,1,nA,nA)
-  recov = 1-(vecnorm(P-Ptil,1)/(2nA))
+  recov = 1-(norm(P-Ptil,1)/(2nA))
   return recov
 end

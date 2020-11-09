@@ -30,7 +30,7 @@ function decomposeX_balance_allfactors(A,B,k,c1,c2,c3)
     U[:,1] = U[:,1]./mui
     du[1] = du[1]*mui
   end
-  usums = vec(sum(U,1))
+  usums = vec(sum(U,dims=1))
   usums = usums.*du
   # println("done with U")
 
@@ -52,7 +52,7 @@ function decomposeX_balance_allfactors(A,B,k,c1,c2,c3)
     V[:,1] = V[:,1]./mvi
     dv[1] = dv[1]*mvi
   end
-  vsums = vec(sum(V,1))
+  vsums = vec(sum(V,dims=1))
   vsums = vsums.*dv
 
   rhos = copy(du)
@@ -77,8 +77,8 @@ function decomposeX_balance_allfactors(A,B,k,c1,c2,c3)
       hk[1] = hksums[localk]
       hk[2:localk] = vsums[end-lt+1:end]
 
-      Du = Diagonal(rhos[i]./rhos[1:i-1])
-      Dv = Diagonal(gams[i]./gams[1:i-1])
+      Du = diagm(rhos[i]./rhos[1:i-1])
+      Dv = diagm(gams[i]./gams[1:i-1])
 
       v1 = Dv*hk
       v2 = Du*rk
@@ -91,7 +91,7 @@ function decomposeX_balance_allfactors(A,B,k,c1,c2,c3)
 
       W1 = vcat(hcat(W_prev,zeros(size(W_prev,1),localk)),
                   hcat(zeros(1,size(W_prev,2)),rk'))
-      W2 = vcat(hcat(c1*eye(size(W_prev,1)),c2*hk),
+      W2 = vcat(hcat(c1*I(size(W_prev,1)),c2*hk),
                   hcat(c2*W_prev,c3*W_prev*hk))
 
       W_curr = W_curr/W_curr[end,end]
@@ -176,7 +176,7 @@ function decomposeX(A,B,k,c1,c2,c3)
 
     W1 = vcat(hcat(W_prev,zeros(size(W_prev,1),localk)),
                 hcat(zeros(1,size(W_prev,2)),rk'))
-    W2 = vcat(hcat(c1*eye(size(W_prev,1)),c2*hk),
+    W2 = vcat(hcat(c1*I(size(W_prev,1)),c2*hk),
                 hcat(c2*W_prev,c3*W_prev*hk))
 
     W_prev = W_curr
@@ -262,7 +262,7 @@ function decomposeX_normalized(A,B,k,c1,c2,c3)
 
     W1 = vcat(hcat(W_prev,zeros(size(W_prev,1),localk)),
                 hcat(zeros(1,size(W_prev,2)),rk'))
-    W2 = vcat(hcat(c1*eye(size(W_prev,1)),c2*hk),
+    W2 = vcat(hcat(c1*I(size(W_prev,1)),c2*hk),
                 hcat(c2*W_prev,c3*W_prev*hk))
 
     W_prev = W_curr
@@ -338,7 +338,7 @@ function decomposeX_with_uv(A,B,k,c1,c2,c3,u,v)
 
     W1 = vcat(hcat(W_prev,zeros(size(W_prev,1),localk)),
                 hcat(zeros(1,size(W_prev,2)),rk'))
-    W2 = vcat(hcat(c1*eye(size(W_prev,1)),c2*hk),
+    W2 = vcat(hcat(c1*I(size(W_prev,1)),c2*hk),
                 hcat(c2*W_prev,c3*W_prev*hk))
 
     W_prev = W_curr

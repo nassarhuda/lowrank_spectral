@@ -1,4 +1,4 @@
-function normout{T}(A::SparseMatrixCSC{T,Int64})
+function normout(A::SparseMatrixCSC{T,Int64}) where T
   # NORMOUT Normalize the outdegrees of the matrix A.
   #
   # P = normout(A)
@@ -10,7 +10,7 @@ function normout{T}(A::SparseMatrixCSC{T,Int64})
   # compute the row-sums/degrees
   d = sum(A,2)
   d = squeeze(d',1)
-  id = 1./d
+  id = ones(size(A,1))./d
   P = spdiagm(id)*A
   return P
 

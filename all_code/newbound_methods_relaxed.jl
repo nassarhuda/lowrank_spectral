@@ -4,7 +4,7 @@ function newbound_rounding(U,V,bmatchval)
   nU = size(U,1)
   nV = size(V,1)
   r = size(U,2)
-  assert(r==size(V,2))
+  @assert r==size(V,2)
 
   d = min(size(U_sortperm,1),size(V_sortperm,1))
   U_weights = sort(U,1,rev=true)
@@ -51,7 +51,7 @@ function newbound_rounding(U,V,bmatchval)
     # bmatchval = 20
     for bm = 1:bmatchval
     if !isempty(ej)
-      shift!(ej)
+      popfirst!(ej)
       P = P + sparse(ei[1:end-bm],ej,1,nU,nV)
     end
     end
@@ -70,11 +70,11 @@ function newbound_rounding_lowrank_evaluation_relaxed(U,V,bmatchval)
   nU = size(U,1)
   nV = size(V,1)
   r = size(U,2)
-  assert(r==size(V,2))
+  @assert r == size(V,2)
 
   d = min(size(U_sortperm,1),size(V_sortperm,1))
-  U_weights = sort(U,1,rev=true)
-  V_weights = sort(V,1,rev=true)
+  U_weights = sort(U,dims=1,rev=true)
+  V_weights = sort(V,dims=1,rev=true)
 
 #   U_weights = U_weights[1:d,:]
 #   V_weights = V_weights[1:d,:]
@@ -92,6 +92,9 @@ function newbound_rounding_lowrank_evaluation_relaxed(U,V,bmatchval)
     vi = V_weights[:,i]
     lastid_ui = findfirst(ui.<0)
     lastid_vi = findfirst(vi.<0)
+
+    lastid_ui = (lastid_ui === nothing) ? 0 : lastid_ui
+    lastid_vi = (lastid_vi === nothing) ? 0 : lastid_vi
 
     if lastid_ui == 0 && lastid_vi == 0
       lastidpos = d
@@ -121,10 +124,10 @@ function newbound_rounding_lowrank_evaluation_relaxed(U,V,bmatchval)
     append!(U1,ei)
     append!(V1,ej)
     # bmatchval = 6
-    println("bmatchval is $bmatchval")
+    #println("bmatchval is $bmatchval")
     for bm = 1:bmatchval
       if !isempty(ej)
-        shift!(ej)
+        popfirst!(ej)
         # P = P + sparse(ei[1:end-bm],ej,1,nU,nV)
         append!(U1,ei[1:end-bm])
         append!(V1,ej)
@@ -133,12 +136,12 @@ function newbound_rounding_lowrank_evaluation_relaxed(U,V,bmatchval)
   end
 
   all_matches = [U1 V1]
-  unique_matches = unique(all_matches,1)
+  unique_matches = unique(all_matches,dims=1)
   U1unique = unique_matches[:,1]
   V1unique = unique_matches[:,2]
   uo = U[U1unique,:]
   vo = V[V1unique,:]
-  weights = vec(sum(uo.*vo,2))
+  weights = vec(sum(uo.*vo,dims=2))
   X = sparse(U1unique,V1unique,weights,nU,nV)
 
   return X
