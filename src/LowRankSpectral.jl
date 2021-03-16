@@ -1,4 +1,9 @@
+
+module LowRankSpectral
+
+
 include("align_networks_eigenalign.jl")
+include("updated_MN_bipartite_matching.jl")
 include("erdos_reyni_functions.jl")
 include("newbound_methods.jl")
 include("newbound_methods_relaxed.jl")
@@ -13,3 +18,7 @@ include("EigenAlign_while_resid.jl")
 include("greed_match.jl")
 include("greedy_lowrank_EigenAlign.jl")
 include("NSD.jl")
+
+export align_networks_eigenalign
+
+end

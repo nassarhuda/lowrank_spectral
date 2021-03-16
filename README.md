@@ -1,3 +1,7 @@
+This is a forked repository for the code associated with with the Low rank Spectral Network Alignment paper. Code has been updated to run on julia 1.0+, and has been given basic module structure to facilitate downloading through the julia package manager. 
+
+
+## Original Readme
 # lowrank_spectral
 Code associated with Low Rank Spectral Network Alignment 
 

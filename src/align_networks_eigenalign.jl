@@ -1,6 +1,13 @@
 using MatrixNetworks
+import MatrixNetworks: bipartite_matching,edge_list
+using SparseArrays
+using LinearAlgebra
+using Statistics
+
 include("../functions_decompositions/decomposeX.jl")
 include("newbound_methods.jl")
+include("newbound_methods_relaxed.jl")
+include("helper_functions.jl")
 include("greedy_lowrank_EigenAlign.jl")
 
 function align_networks_eigenalign(A,B,iters,method,bmatch; default_params = true)
@@ -81,11 +88,11 @@ function align_networks_eigenalign(A,B,iters,method,bmatch; default_params = tru
   elseif method == "lowrank_svd_union"
 
     U,S,V = svd(Wk)
-    U1 = Uk*U*diagm(sqrt(S)); V1 = Vk*V*diagm(sqrt(S));
+    U1 = Uk*U*diagm(sqrt.(S)); V1 = Vk*V*diagm(sqrt.(S));
     X = newbound_rounding_lowrank_evaluation_relaxed(U1,V1,bmatch).*(10^8); #bmatch
     avgdeg = map(x->sum(X[x,:].!=0),1:size(X,1))
     avgdeg = mean(avgdeg)
-    tic(); ma,mb = edge_list(bipartite_matching(X));timematching = toq()
+    (ma,mb),timematching = @timed edge_list(bipartite_matching(X;normalize=false))
     D = avgdeg;#nnz(X)/prod(size(X))
   elseif method == "lowrank_lu_union"
     L,U = lu(Wk,Val{false})
@@ -96,7 +103,7 @@ function align_networks_eigenalign(A,B,iters,method,bmatch; default_params = tru
 
   elseif method == "greedy"
     U,S,V = svd(Wk)
-    U1 = Uk*U*diagm(sqrt(S)); V1 = Vk*V*diagm(sqrt(S));
+    U1 = Uk*U*diagm(sqrt.(S)); V1 = Vk*V*diagm(sqrt.(S));
     ma,mb = greedy_lowrank(U1,V1)
   else
     error("method should be one of the following: (1)eigenalign,
@@ -125,8 +132,8 @@ end
 function balance_decomposition(Uk,Wk,Vk)
   Du = diagm(vec(maximum(Uk,1)))
   Dv = diagm(vec(maximum(Vk,1)))
-  Ukt = Uk*diagm(vec(1./maximum(Uk,1)))
-  Vkt = Vk*diagm(vec(1./maximum(Vk,1)))
+  Ukt = Uk*diagm(vec(1.0 ./maximum(Uk,1)))
+  Vkt = Vk*diagm(vec(1.0 ./maximum(Vk,1)))
   rho = (maximum(Du)*maximum(Dv))
   Wkt2 = Du*Wk*Dv./rho
   rho *= maximum(Wkt2)
@@ -134,7 +141,7 @@ function balance_decomposition(Uk,Wk,Vk)
   L,U = lu(Wkt2,Val{false})
   Ud = diagm(sqrt.(abs.(diag(U)))) ##here
   L2 = L*Ud
-  U2 = diagm(1./sqrt.(diag(U)))*U
+  U2 = diagm(ones(size(U,1))./sqrt.(diag(U)))*U
   Un = Ukt*L2
   Vn = Vkt*U2'
   Xn = Ukt*L2*U2*Vkt'
@@ -143,10 +150,10 @@ end
 
 # can use sqrt here (like above)
 function split_balanced_decomposition(Uk,Wk,Vk)
-  L,U = lu(Wk,Val{false})
+  L,U = lu(Wk,Val(false))
   Ud = Diagonal(sqrt.(abs.(diag(U))))
   L2 = L*Ud
-  U2 = Diagonal(1./sqrt.(diag(U)))*U
+  U2 = Diagonal(ones(size(U,1))./sqrt.(diag(U)))*U
   Un = Uk*L2
   Vn = Vk*U2'
   return Un,Vn
@@ -154,7 +161,7 @@ end
 
 function split_svd(Uk,Wk,Vk)
   U,S,V = svd(Wk)
-  D = Diagonal(sqrt(S))
+  D = Diagonal(sqrt.(S))
   Unew = Uk*U*D
   Vnew = Vk*V*D
   return Unew,Vnew

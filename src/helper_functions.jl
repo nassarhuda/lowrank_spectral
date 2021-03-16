@@ -106,3 +106,34 @@ function gs3_evaluate2(A,B,mi,mj)
   NCV_GS3 = 1/(((1/GS3)+(1/NCV))/2)
   return NCV_GS3
 end
+
+"""
+sortcolsperm(A,true) returns the indices of sorted columns in A in descending order
+sortcolsperm(A,false) returns the indices of sorted columns in A in ascending order
+```
+example:
+  julia> W = rand(3,3)
+    3×3 Array{Float64,2}:
+    0.661943  0.00517749  0.332394
+    0.716344  0.61179     0.544258
+    0.372336  0.994069    0.297704
+  julia> sortcolsperm(W,true)
+    3×3 Array{Int64,2}:
+    2  3  2
+    1  2  1
+    3  1  3
+  julia> sortcolsperm(W,false)
+    3×3 Array{Int64,2}:
+    3  1  3
+    1  2  1
+    2  3  2
+```
+"""
+function sortcolsperm(X::Matrix{T},REV::Bool) where T
+    P = Matrix{Int}(undef,size(X,1),size(X,2))
+
+    Threads.@threads for i=1:size(X,2)
+        P[:,i] = sortperm(X[:,i]; rev=REV)
+    end
+    return P
+end

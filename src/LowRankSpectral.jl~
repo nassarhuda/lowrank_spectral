@@ -1,0 +1,21 @@
+
+module LowRankSpectral
+
+include("align_networks_eigenalign.jl")
+include("updated_MN_bipartite_matching.jl")
+include("erdos_reyni_functions.jl")
+include("newbound_methods.jl")
+include("newbound_methods_relaxed.jl")
+include("EigenAlign_matching.jl")
+include("helper_functions.jl")
+include("generate_b_match_overlapping.jl")
+include("convert_LEDA_to_adjacency.jl")
+include("matching_with_prior.jl")
+include("mean_harmonic.jl")
+include("powerlaw_functions.jl")
+include("EigenAlign_while_resid.jl")
+include("greed_match.jl")
+include("greedy_lowrank_EigenAlign.jl")
+include("NSD.jl")
+
+end
